@@ -1,0 +1,85 @@
+diff -rNu linuxigd-0.95/etc/upnpd.conf linuxigd-0.95-patch/etc/upnpd.conf
+--- linuxigd-0.95/etc/upnpd.conf	2006-02-01 23:53:39.000000000 +0000
++++ linuxigd-0.95-patch/etc/upnpd.conf	2006-08-14 13:37:25.000000000 +0100
+@@ -1,8 +1,11 @@
++# To change the interfaces used edit:
++#   /etc/sysconfig/upnpd
++
+ #
+ # The full path and name of the iptables executable,
+ # (enclosed in quotes).
+ #
+-iptables_location = "/usr/sbin/iptables"
++iptables_location = "/sbin/iptables"
+ 
+ #
+ # Daemon debug level. Messages are logged via syslog to debug.
+@@ -56,7 +59,7 @@
+ # seconds | HH:MM - duration from the time of addition
+ # @seconds | @HH:MM - expire mapping at the specified time of day
+ # default = 0
+-duration = 0
++duration = 86400 # One day
+ 
+ # The name of the igd device xml description document
+ # default = gatedesc.xml
+diff -rNu linuxigd-0.95/etc/upnpd.rc linuxigd-0.95-patch/etc/upnpd.rc
+--- linuxigd-0.95/etc/upnpd.rc	2006-07-25 17:34:55.000000000 +0100
++++ linuxigd-0.95-patch/etc/upnpd.rc	2006-08-14 14:14:55.000000000 +0100
+@@ -46,10 +46,10 @@
+ stop() {
+ 	echo -n $"Stopping $prog: "
+ 	killproc "$UPNPD"
+-
+-	[ "$ALLOW_MULTICAST" != "no" ] && route del -net 239.0.0.0 netmask 255.0.0.0 $INTIFACE
+ 	RETVAL=$?
+ 	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/upnpd
++
++	[ "$ALLOW_MULTICAST" != "no" ] && route del -net 239.0.0.0 netmask 255.0.0.0 $INTIFACE
+ 	echo
+         return $RETVAL
+ }
+diff -rNu linuxigd-0.95/etc/upnpd.rc.conf linuxigd-0.95-patch/etc/upnpd.rc.conf
+--- linuxigd-0.95/etc/upnpd.rc.conf	1970-01-01 01:00:00.000000000 +0100
++++ linuxigd-0.95-patch/etc/upnpd.rc.conf	2006-08-14 13:36:13.000000000 +0100
+@@ -0,0 +1,11 @@
++# default upnpd settings
++
++#
++# Internet interface
++#
++EXTIFACE="ppp0"
++
++#
++# LAN interface
++#
++INTIFACE="eth0"
+diff -rNu linuxigd-0.95/Makefile linuxigd-0.95-patch/Makefile
+--- linuxigd-0.95/Makefile	2006-05-23 23:16:36.000000000 +0100
++++ linuxigd-0.95-patch/Makefile	2006-08-14 13:37:42.000000000 +0100
+@@ -33,11 +33,17 @@
+ 	rm -f *.o upnpd
+ 
+ install: upnpd
+-	install -d /etc/linuxigd
+-	install etc/gatedesc.xml /etc/linuxigd
+-	install etc/gateconnSCPD.xml  /etc/linuxigd
+-	install etc/gateicfgSCPD.xml /etc/linuxigd
+-	install etc/dummy.xml /etc/linuxigd
+-	install upnpd $(PREFIX)/sbin
+-	install upnpd.8 $(PREFIX)/share/man/man8
+-	if [ ! -f /etc/upnpd.conf ]; then install etc/upnpd.conf /etc; fi
++	install -d $(DESTDIR)/etc/init.d/
++	install -d $(DESTDIR)/etc/linuxigd/
++	install -d $(DESTDIR)/etc/sysconfig/
++	install -d $(DESTDIR)/usr/sbin/
++	install -d $(DESTDIR)/usr/share/man/man8/
++	install etc/gatedesc.xml $(DESTDIR)/etc/linuxigd
++	install etc/gateconnSCPD.xml  $(DESTDIR)/etc/linuxigd
++	install etc/gateicfgSCPD.xml $(DESTDIR)/etc/linuxigd
++	install etc/dummy.xml $(DESTDIR)/etc/linuxigd
++	install etc/upnpd.conf $(DESTDIR)/etc
++	install upnpd $(DESTDIR)/usr/sbin
++	install upnpd.8 $(DESTDIR)/usr/share/man/man8
++	install -D etc/upnpd.rc $(DESTDIR)/etc/init.d/upnpd
++	install -D etc/upnpd.rc.conf $(DESTDIR)/etc/sysconfig/upnpd
