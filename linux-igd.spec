@@ -1,6 +1,6 @@
 # TODO: %service?
 Summary:	The Linux UPnP Internet Gateway Device
-Summary(pl):	Linuksowa implementacja UPnP Internet Gateway Device
+Summary(pl.UTF-8):   Linuksowa implementacja UPnP Internet Gateway Device
 Name:		linux-igd
 Version:	0.95
 Release:	1
@@ -19,11 +19,11 @@ This is a deamon that emulates Microsoft's Internet Connection Service
 (IGD) and allows UPnP aware clients, such as MSN Messenger to work
 properly from behind a Linux NAT firewall.
 
-%description -l pl
-Ten pakiet zawiera demona emuluj±cego Internet Connection Service
-(ICS) Microsoftu. Implementuje specyfikacjê UPnP Internet Gateway
-Device (IGD) i pozwala klientom obs³uguj±cym UPnP, takim jak MSN
-Messenger, pracowaæ poprawnie zza linuksowego firewalla z NAT-em.
+%description -l pl.UTF-8
+Ten pakiet zawiera demona emulujÄ…cego Internet Connection Service
+(ICS) Microsoftu. Implementuje specyfikacjÄ™ UPnP Internet Gateway
+Device (IGD) i pozwala klientom obsÅ‚ugujÄ…cym UPnP, takim jak MSN
+Messenger, pracowaÄ‡ poprawnie zza linuksowego firewalla z NAT-em.
 
 %prep
 %setup -q -n linuxigd-%{version}
