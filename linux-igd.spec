@@ -1,6 +1,6 @@
 # TODO: %service?
 Summary:	The Linux UPnP Internet Gateway Device
-Summary(pl.UTF-8):   Linuksowa implementacja UPnP Internet Gateway Device
+Summary(pl.UTF-8):	Linuksowa implementacja UPnP Internet Gateway Device
 Name:		linux-igd
 Version:	0.95
 Release:	1
