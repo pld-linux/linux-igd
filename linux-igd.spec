@@ -1,15 +1,22 @@
-# TODO: %service?
+# TODO: %%service?
+#
+# Conditional build:
+%bcond_without	iptables	# iptables/netfilter manipulation support
+
 Summary:	The Linux UPnP Internet Gateway Device
 Summary(pl.UTF-8):	Linuksowa implementacja UPnP Internet Gateway Device
 Name:		linux-igd
-Version:	0.95
+Version:	1.0
 Release:	1
-License:	GPL
+License:	GPL v2
 Group:		Daemons
-Source0:	http://dl.sourceforge.net/linux-igd/linuxigd-%{version}.tar.gz
-# Source0-md5:	0f203a2db5e3fb01496b73e417dbd9a6
-URL:		http://linux-igd.sourceforge.net/
+Source0:	http://downloads.sourceforge.net/linux-igd/linuxigd-%{version}.tar.gz
+# Source0-md5:	929f5c4878c91d534613b7c7070215d9
 Patch0:		%{name}-install.patch
+Patch1:		%{name}-includes.patch
+Patch2:		%{name}-iptables.patch
+URL:		http://linux-igd.sourceforge.net/
+%{?with_iptables:BuildRequires:	iptables-devel >= 1.6}
 BuildRequires:	libupnp-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -28,10 +35,14 @@ Messenger, pracować poprawnie zza linuksowego firewalla z NAT-em.
 %prep
 %setup -q -n linuxigd-%{version}
 %patch0 -p1
+%patch1 -p1
+%patch2 -p1
 
 %build
 %{__make} \
-	OPT="%{rpmcflags}"
+	CC="%{__cc}" \
+	CFLAGS="%{rpmcflags} -Wall" \
+	%{?with_iptables:HAVE_LIBIPTC=1}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -51,6 +62,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
+%doc CHANGES INSTALL TODO doc/config_options
 %dir %{_sysconfdir}/linuxigd
 %{_sysconfdir}/linuxigd/*.xml
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/upnpd.conf

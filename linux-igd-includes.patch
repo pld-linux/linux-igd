@@ -1,0 +1,26 @@
+--- linuxigd-1.0/gatedevice.c.orig	2007-02-08 00:07:27.000000000 +0100
++++ linuxigd-1.0/gatedevice.c	2017-12-19 17:06:46.347903126 +0100
+@@ -1,4 +1,5 @@
+ #include <syslog.h>
++#include <stdio.h>
+ #include <stdlib.h>
+ #include <upnp/ixml.h>
+ #include <string.h>
+--- linuxigd-1.0/main.c.orig	2006-07-25 22:45:13.000000000 +0200
++++ linuxigd-1.0/main.c	2017-12-19 17:06:11.061236862 +0100
+@@ -1,5 +1,6 @@
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <unistd.h>
+ #include <syslog.h>
+ #include <signal.h>
+--- linuxigd-1.0/pmlist.c.orig	2006-10-01 17:58:32.000000000 +0200
++++ linuxigd-1.0/pmlist.c	2017-12-19 17:07:26.461235998 +0100
+@@ -1,4 +1,6 @@
++#include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <sys/wait.h>
+ #include <unistd.h>
+ #include <upnp/upnp.h>

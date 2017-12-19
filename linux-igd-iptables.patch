@@ -1,0 +1,111 @@
+--- linuxigd-1.0/iptc.c.orig	2006-09-11 17:55:48.000000000 +0200
++++ linuxigd-1.0/iptc.c	2017-12-19 18:22:25.891184625 +0100
+@@ -4,9 +4,20 @@
+ #include <errno.h>
+ #include <netdb.h>
+ #include <string.h>
++#ifdef OLDIPT
+ #include <iptables.h>
++#endif
+ #include <libiptc/libiptc.h>
++#ifdef OLDIPT
+ #include <linux/netfilter_ipv4/ip_nat.h>
++#else
++#include <linux/netfilter/nf_nat.h>
++#define IP_NAT_RANGE_MAP_IPS NF_NAT_RANGE_MAP_IPS
++#define IP_NAT_RANGE_PROTO_SPECIFIED NF_NAT_RANGE_PROTO_SPECIFIED
++#define ip_nat_range nf_nat_ipv4_range
++#define ip_nat_multi_range nf_nat_ipv4_multi_range_compat
++#define IPT_ALIGN XT_ALIGN
++#endif
+ #include <arpa/inet.h> /* inet_addr */
+ #include "globals.h"
+ #include "util.h"
+@@ -44,7 +55,7 @@
+                    const char *dnat_to,
+                    const int append)
+ {
+-	iptc_handle_t handle;
++	struct iptc_handle *handle;
+ 	struct ipt_entry *chain_entry;
+ 	struct ipt_entry_match *entry_match = NULL;
+ 	struct ipt_entry_target *entry_target = NULL;
+@@ -111,6 +122,7 @@
+ 	handle = iptc_init(table);
+ 	if (!handle) {
+ 		trace(1, "libiptc error: Can't initialize table %s, %s", table, iptc_strerror(errno));
++		iptc_free(handle);
+ 		return;
+ 	}
+ 
+@@ -118,18 +130,21 @@
+ 	result = iptc_is_chain(chain, handle);
+ 	if (!result) {
+ 		trace(1, "libiptc error: Chain %s does not exist!", chain);
++		iptc_free(handle);
+ 		return;
+ 	}
+ 	if (append)
+-		result = iptc_append_entry(labelit, chain_entry, &handle);
++		result = iptc_append_entry(labelit, chain_entry, handle);
+ 	else
+-		result = iptc_insert_entry(labelit, chain_entry, 0, &handle);
++		result = iptc_insert_entry(labelit, chain_entry, 0, handle);
+ 
+ 	if (!result) {
+ 		trace(1, "libiptc error: Can't add, %s", iptc_strerror(errno));
++		iptc_free(handle);
+ 		return;
+ 	}
+-	result = iptc_commit(&handle);
++	result = iptc_commit(handle);
++	iptc_free(handle);
+ 	if (!result) {
+ 	  trace(1, "libiptc error: Commit error, %s", iptc_strerror(errno));
+ 		return;
+@@ -154,7 +169,7 @@
+                       const char *target,
+                       const char *dnat_to)
+ {
+-	iptc_handle_t handle;
++	struct iptc_handle *handle;
+ 	const struct ipt_entry *e;
+ 	ipt_chainlabel labelit;
+ 	int i, result;
+@@ -177,7 +192,7 @@
+ 	}
+ 	
+ 	/* check through rules to find match */
+-	for (e = iptc_first_rule(chain, &handle), i=0; e; e = iptc_next_rule(e, &handle), i++)  {
++	for (e = iptc_first_rule(chain, handle), i=0; e; e = iptc_next_rule(e, handle), i++)  {
+ 		if (s_src != INADDR_NONE && e->ip.src.s_addr != s_src) continue;
+ 		if (s_dest != INADDR_NONE && e->ip.dst.s_addr != s_dest) continue;
+ 		if (iniface && strcmp(e->ip.iniface, iniface) != 0) continue;
+@@ -185,7 +200,7 @@
+ 		if (protocol && strcmp(protocol, "TCP") == 0 && e->ip.proto != IPPROTO_TCP) continue;
+ 		if (protocol && strcmp(protocol, "UDP") == 0 && e->ip.proto != IPPROTO_UDP) continue;
+ 		if ((srcports || destports) && IPT_MATCH_ITERATE(e, matchcmp, srcports, destports) == 0) continue;
+-		if (target && strcmp(target, iptc_get_target(e, &handle)) != 0) continue;
++		if (target && strcmp(target, iptc_get_target(e, handle)) != 0) continue;
+ 		if (dnat_to && strcmp(target, "DNAT") == 0) {
+ 			struct ipt_entry_target *t;
+ 			struct ip_nat_multi_range *mr;
+@@ -208,13 +223,15 @@
+ 		
+ 		break;
+ 	}
+-	if (!e) return;
+-	result = iptc_delete_num_entry(chain, i, &handle);
++	if (!e) { iptc_free(handle); return; }
++	result = iptc_delete_num_entry(chain, i, handle);
+ 	if (!result) {
+ 	  trace(1, "libiptc error: Delete error, %s", iptc_strerror(errno));
++	  iptc_free(handle);
+ 		return;
+ 	}
+-	result = iptc_commit(&handle);
++	result = iptc_commit(handle);
++	iptc_free(handle);
+ 	if (!result) {
+ 	  trace(1, "libiptc error: Commit error, %s", iptc_strerror(errno));
+ 		return;
